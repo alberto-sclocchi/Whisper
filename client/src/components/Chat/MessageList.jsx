@@ -6,6 +6,7 @@ import BadwordWarning from './BadwordWarning';
 import DropDownOptions from './DropDownOption';
 import MarkdownIt from 'markdown-it';
 import MessageSeen from './MessageSeen';
+import MessageReactions from './MessageReactions';
 import PropTypes from 'prop-types';
 import Status from './Status';
 import chatHelper from 'src/lib/chatHelper';
@@ -21,6 +22,7 @@ const MessageList = ({
 	inputRef,
 	cancelEdit,
 	setEditing,
+	onReact,
 }) => {
 	const { app } = useApp();
 	const { messasges: state, startReply } = useChat();
@@ -29,6 +31,7 @@ const MessageList = ({
 	// use the id so we can track what message's previousMessage is open
 
 	const [badwordChoices, setBadwordChoices] = useState({});
+	const [openReactionMessageId, setOpenReactionMessageId] = useState(null);
 
 	const badwords = new BadWordsNext({ data: en });
 
@@ -40,6 +43,10 @@ const MessageList = ({
 
 	function getRepliedMessage(replyTo) {
 		return decryptedMessages.find((object) => object.id === replyTo);
+	}
+
+	function toggleReactionPicker(messageId) {
+		setOpenReactionMessageId((openId) => (openId === messageId ? null : messageId));
 	}
 
 	return (
@@ -56,6 +63,7 @@ const MessageList = ({
 				containsBadword,
 				isRead,
 				replyTo,
+				reactions,
 			}) => {
 				const isSender = sender.toString() === senderId.toString();
 				// original message this message is a reply to
@@ -185,6 +193,14 @@ const MessageList = ({
 											status={status}
 										/>
 										<MessageSeen isRead={isRead} isSender={isSender} />
+										<MessageReactions
+											reactions={reactions}
+											userId={senderId}
+											isSender={isSender}
+											isPickerOpen={openReactionMessageId === id}
+											onTogglePicker={() => toggleReactionPicker(id)}
+											onReact={(reaction) => onReact(id, reaction)}
+										/>
 									</>
 								)}
 							</div>
@@ -206,4 +222,5 @@ MessageList.propTypes = {
 	inputRef: PropTypes.object.isRequired,
 	cancelEdit: PropTypes.func.isRequired,
 	setEditing: PropTypes.func.isRequired,
+	onReact: PropTypes.func.isRequired,
 };
